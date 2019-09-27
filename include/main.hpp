@@ -6,11 +6,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
+
+#include "globVar.hpp"
+#include "debug.hpp"
 
 #define APP_NAME        "VkSelfLearn"
+
 #define WINDOW_TITLE    "Vulkan Self-Learn"
 #define WINDOW_W        800
 #define WINDOW_H        600
+
+#define FPS             144
 
 #ifndef MY_ROOT_DIR
 #define MY_ROOT_DIR     "."
@@ -19,9 +26,4 @@
 bool initAll();
 void destroyAll();
 void pollEvents(bool *quit);
-
-struct GLOB_VARS
-{
-    SDL_Window *myWindow = nullptr;
-    VkInstance myVkInstance = nullptr;
-} globVar;
+void fpsControl(Uint32* tNow, Uint32 *tPrev);
