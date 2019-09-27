@@ -176,6 +176,8 @@ bool initAll()
         printf("Failed to create Vulkan surface from SDL2\nSDL Error: %s\n", SDL_GetError());
         return false;
     }
+    // set device extensions
+    globVar.myDeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     // Initialize Physical Device
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(globVar.myVkInstance, &deviceCount, nullptr);
@@ -221,7 +223,8 @@ bool initAll()
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = 0; // Device specific extension, leave to 0 for now
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(globVar.myDeviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = globVar.myDeviceExtensions.data();
     createInfo.flags = 0;
     createInfo.pNext = nullptr;
     if(globVar.myVkValLayersEnabled)

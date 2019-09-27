@@ -4,16 +4,31 @@ extern GLOB_VARS globVar;
 
 bool isDeviceSuitable(VkPhysicalDevice device)
 {
-    // VkPhysicalDeviceProperties deviceProperties;
-    // VkPhysicalDeviceFeatures deviceFeatures;
-    // vkGetPhysicalDeviceProperties(device, &deviceProperties);
-    // vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-    // return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-    //        deviceFeatures.geometryShader;
-    
     // check queue families of the device
     QueueFamilyIndices indices = findQueueFamilies(device);
-    return indices.graphicsFamilyFound && indices.presentFamilyFound; // just use any gpu available
+    bool indiceComplete = indices.graphicsFamilyFound && indices.presentFamilyFound;
+    bool extensionSupport = checkDeviceExtensionSupport(device);
+    bool swapChainSupport = false;
+    if(extensionSupport)
+    {
+        SwapChainSupportDetails swapChainDetails = querySwapChainSupport(device);
+        swapChainSupport = !swapChainDetails.formats.empty() && !swapChainDetails.presentModes.empty();
+    }
+    return indiceComplete && extensionSupport && swapChainSupport;
+}
+
+bool checkDeviceExtensionSupport(VkPhysicalDevice device)
+{
+    uint32_t extensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+    std::set<std::string> requiredExtensions(globVar.myDeviceExtensions.begin(), globVar.myDeviceExtensions.end());
+    for(std::vector<VkExtensionProperties>::iterator iter = availableExtensions.begin(); iter != availableExtensions.end(); iter++)
+    {
+        requiredExtensions.erase(iter->extensionName);
+    }
+    return requiredExtensions.empty();
 }
 
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
@@ -46,4 +61,29 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
     }
 
     return indices;
+}
+
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device)
+{
+    SwapChainSupportDetails details;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, globVar.myVkSurface, &details.capabilities);
+
+    uint32_t formatCount = 0;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, globVar.myVkSurface, &formatCount, nullptr);
+    if(formatCount)
+    {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, globVar.myVkSurface, &formatCount, details.formats.data());
+    }
+
+    uint32_t presentModeCount = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, globVar.myVkSurface, &presentModeCount, nullptr);
+    if(presentModeCount)
+    {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, globVar.myVkSurface, &presentModeCount, details.presentModes.data());
+    }
+
+    return details;
 }
