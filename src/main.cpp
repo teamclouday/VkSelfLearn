@@ -196,11 +196,13 @@ bool initAll()
     // Initialize Logical Device
     QueueFamilyIndices indices = findQueueFamilies(globVar.myVkPhysicalDevice);
     VkDeviceQueueCreateInfo queueCreateInfo;
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
     queueCreateInfo.queueCount = 1;
     float queueCreatePriority = 1.0f;
     queueCreateInfo.pQueuePriorities = &queueCreatePriority;
+    queueCreateInfo.flags = 0;
+    queueCreateInfo.pNext = nullptr;
     VkPhysicalDeviceFeatures deviceFeatures = {}; // Leave all features to VK_FALSE for now
     VkDeviceCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -208,6 +210,8 @@ bool initAll()
     createInfo.queueCreateInfoCount = 1;
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = 0; // Device specific extension, leave to 0 for now
+    createInfo.flags = 0;
+    createInfo.pNext = nullptr;
     if(globVar.myVkValLayersEnabled)
     {
         createInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myVkValLayers.size());
@@ -227,6 +231,7 @@ bool initAll()
 
 void destroyAll()
 {
+    
     if(globVar.myVkValLayersEnabled)
         DestroyDebugUtilsMessengerEXT(globVar.myVkInstance, globVar.myDebugMessager, nullptr);
     if(globVar.myVkInstance)
