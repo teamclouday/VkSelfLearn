@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <iostream>
 
 #include "globVar.hpp"
 
@@ -22,5 +23,14 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageTypeFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+        void *pUserData
+    )
+{
+    if(messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        printf("Validation Layer [%s]: [%s]\n", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+    return VK_FALSE;
+}

@@ -145,11 +145,11 @@ bool initAll()
     vkInstanceInfo.enabledExtensionCount = static_cast<uint32_t>(vkenames.size());
     vkInstanceInfo.ppEnabledExtensionNames = vkenames.data();
     vkInstanceInfo.flags = 0;
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     if(globVar.myVkValLayersEnabled)
     {
         vkInstanceInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myVkValLayers.size());
         vkInstanceInfo.ppEnabledLayerNames = globVar.myVkValLayers.data();
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
         populateDebugMessengerCreateInfo(debugCreateInfo);
         vkInstanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
     }
@@ -231,7 +231,8 @@ bool initAll()
 
 void destroyAll()
 {
-    
+    if(globVar.myVkLogicalDevice)
+        vkDestroyDevice(globVar.myVkLogicalDevice, nullptr);
     if(globVar.myVkValLayersEnabled)
         DestroyDebugUtilsMessengerEXT(globVar.myVkInstance, globVar.myDebugMessager, nullptr);
     if(globVar.myVkInstance)
