@@ -72,20 +72,20 @@ bool initAll()
         return false;
     }
     // Set Vulkan Validation Layers
-    globVar.myvkValLayers.push_back("VK_LAYER_KHRONOS_validation");
+    globVar.myVkValLayers.push_back("VK_LAYER_KHRONOS_validation");
 #ifdef MY_DEBUG_MODE
-    globVar.myvkValLayersEnabled = true;
+    globVar.myVkValLayersEnabled = true;
 #endif
     unsigned int layercount = 0;
     VkLayerProperties* availableLayers = nullptr;
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
     {
         vkEnumerateInstanceLayerProperties(&layercount, nullptr);
         availableLayers = (VkLayerProperties*)malloc(layercount*sizeof(VkLayerProperties));
         vkEnumerateInstanceLayerProperties(&layercount, availableLayers);
     }
     // Check layers exists in available layers
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
     {
         if(!availableLayers)
         {
@@ -93,7 +93,7 @@ bool initAll()
             return false;
         }
         
-        for(std::vector<const char*>::iterator iter = globVar.myvkValLayers.begin(); iter != globVar.myvkValLayers.end(); iter++)
+        for(std::vector<const char*>::iterator iter = globVar.myVkValLayers.begin(); iter != globVar.myVkValLayers.end(); iter++)
         {
             bool layerFound = false;
             for(VkLayerProperties* ptr = availableLayers; ptr < availableLayers + layercount; ptr++)
@@ -128,7 +128,7 @@ bool initAll()
         return false;
     }
     std::vector<const char*>vkenames;
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
     {
         vkenames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
@@ -145,10 +145,10 @@ bool initAll()
     vkInstanceInfo.enabledExtensionCount = static_cast<uint32_t>(vkenames.size());
     vkInstanceInfo.ppEnabledExtensionNames = vkenames.data();
     vkInstanceInfo.flags = 0;
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
     {
-        vkInstanceInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myvkValLayers.size());
-        vkInstanceInfo.ppEnabledLayerNames = globVar.myvkValLayers.data();
+        vkInstanceInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myVkValLayers.size());
+        vkInstanceInfo.ppEnabledLayerNames = globVar.myVkValLayers.data();
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
         populateDebugMessengerCreateInfo(debugCreateInfo);
         vkInstanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
@@ -165,18 +165,40 @@ bool initAll()
         return false;
     }
     // Create Debug Messager
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
     {
         if(!setUpDebugMessager())
             return false;
     }
-    
+    // Initialize Physical Devices
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(globVar.myVkInstance, &deviceCount, nullptr);
+    if(!deviceCount)
+    {
+        printf("Failed to find a GPU that supports Vulkan on this machine\n");
+        return false;
+    }
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(globVar.myVkInstance, &deviceCount, devices.data());
+    for(std::vector<VkPhysicalDevice>::iterator iter = devices.begin(); iter != devices.end(); iter++)
+    {
+        if(isDeviceSuitable(*iter))
+        {
+            globVar.myVkPhysicalDevice = *iter;
+            break;
+        }
+    }
+    if(!globVar.myVkPhysicalDevice)
+    {
+        printf("Failed to find a suitable GPU\n");
+        return false;
+    }
     return true;
 }
 
 void destroyAll()
 {
-    if(globVar.myvkValLayersEnabled)
+    if(globVar.myVkValLayersEnabled)
         DestroyDebugUtilsMessengerEXT(globVar.myVkInstance, globVar.myDebugMessager, nullptr);
     if(globVar.myVkInstance)
         vkDestroyInstance(globVar.myVkInstance, nullptr);

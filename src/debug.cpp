@@ -65,3 +65,14 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
     createInfo.pUserData = nullptr;
     createInfo.flags = 0;
 }
+
+bool isDeviceSuitable(VkPhysicalDevice device)
+{
+    // VkPhysicalDeviceProperties deviceProperties;
+    // VkPhysicalDeviceFeatures deviceFeatures;
+    // vkGetPhysicalDeviceProperties(device, &deviceProperties);
+    // vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+    // return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+    //        deviceFeatures.geometryShader;
+    return true; // just use any gpu available
+}
