@@ -1,0 +1,5 @@
+build/*
+external/*
+!external/external.zip
+.vscode/*
+bin/*
