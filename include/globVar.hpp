@@ -34,6 +34,7 @@ struct GLOB_VARS
     VkSurfaceKHR myVkSurface = nullptr;
     VkSwapchainKHR myVkSwapChain = nullptr;
     std::vector<VkImage> myVkSwapChainImages;
+    std::vector<VkImageView> myVkSwapChainImageViews;
     VkFormat myVkSwapChainFormat;
     VkExtent2D myVkSwapChainExtent;
     VkDebugUtilsMessengerEXT myDebugMessager = nullptr;

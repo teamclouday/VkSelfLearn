@@ -112,7 +112,7 @@ bool initAll()
         }
     }
     // Set Vulkan Application Info
-    VkApplicationInfo vkAppInfo;
+    VkApplicationInfo vkAppInfo = {};
     vkAppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     vkAppInfo.pNext = NULL;
     vkAppInfo.pApplicationName = APP_NAME;
@@ -139,7 +139,7 @@ bool initAll()
         printf("SDL Failed to get Vulkan Instance Extensions\nSDL Error: %s\n", SDL_GetError());
         return false;
     }
-    VkInstanceCreateInfo vkInstanceInfo;
+    VkInstanceCreateInfo vkInstanceInfo = {};
     vkInstanceInfo.pApplicationInfo = &vkAppInfo;
     vkInstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     vkInstanceInfo.enabledExtensionCount = static_cast<uint32_t>(vkenames.size());
@@ -208,7 +208,7 @@ bool initAll()
     float queueCreatePriority = 1.0f;
     for(std::vector<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
     {
-        VkDeviceQueueCreateInfo queueCreateInfo;
+        VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = *iter;
         queueCreateInfo.queueCount = 1;
@@ -218,7 +218,7 @@ bool initAll()
         queueCreateInfos.push_back(queueCreateInfo);
     }
     VkPhysicalDeviceFeatures deviceFeatures = {}; // Leave all features to VK_FALSE for now
-    VkDeviceCreateInfo createInfo;
+    VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -252,7 +252,7 @@ bool initAll()
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if(swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
         imageCount = swapChainSupport.capabilities.maxImageCount; // not exceed the max image count
-    VkSwapchainCreateInfoKHR swapChainInfo;
+    VkSwapchainCreateInfoKHR swapChainInfo = {};
     swapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapChainInfo.surface = globVar.myVkSurface;
     swapChainInfo.minImageCount = imageCount;
@@ -291,11 +291,39 @@ bool initAll()
     // Store Swap Chain Vars
     globVar.myVkSwapChainFormat = surfaceFormat.format;
     globVar.myVkSwapChainExtent = extent;
+    // Create Swap Chain Image Views
+    globVar.myVkSwapChainImageViews.resize(globVar.myVkSwapChainImages.size());
+    for(size_t i = 0; i < globVar.myVkSwapChainImages.size(); i++)
+    {
+        VkImageViewCreateInfo viewCreateInfo = {};
+        viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewCreateInfo.image = globVar.myVkSwapChainImages[i];
+        viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewCreateInfo.format = globVar.myVkSwapChainFormat;
+        viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewCreateInfo.subresourceRange.baseMipLevel = 0;
+        viewCreateInfo.subresourceRange.levelCount = 1;
+        viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        viewCreateInfo.subresourceRange.layerCount = 1;
+        if(vkCreateImageView(globVar.myVkLogicalDevice, &viewCreateInfo, nullptr, &globVar.myVkSwapChainImageViews[i]) != VK_SUCCESS)
+        {
+            printf("Failed to create Vulkan Swap Chain Image View\n");
+            return false;
+        }
+    }
     return true;
 }
 
 void destroyAll()
 {
+    for(std::vector<VkImageView>::iterator iter = globVar.myVkSwapChainImageViews.begin(); iter != globVar.myVkSwapChainImageViews.end(); iter++)
+    {
+        vkDestroyImageView(globVar.myVkLogicalDevice, *iter, nullptr);
+    }
     if(globVar.myVkSwapChain)
         vkDestroySwapchainKHR(globVar.myVkLogicalDevice, globVar.myVkSwapChain, nullptr);
     if(globVar.myVkSurface)
