@@ -3,3 +3,4 @@ external/*
 !external/external.zip
 .vscode/*
 bin/*
+VkRun
