@@ -9,9 +9,10 @@
 struct GLOB_VARS
 {
     SDL_Window *myWindow = nullptr;
-    VkInstance myVkInstance = nullptr;
+    VkInstance myVkInstance;
     std::vector<const char*> myVkValLayers;
     bool myVkValLayersEnabled = false;
-    VkDebugUtilsMessengerEXT myDebugMessager = nullptr;
-    VkPhysicalDevice myVkPhysicalDevice = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT myDebugMessager;
+    VkPhysicalDevice myVkPhysicalDevice;
+    VkDevice myVkLogicalDevice;
 };

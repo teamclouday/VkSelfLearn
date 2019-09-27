@@ -170,7 +170,7 @@ bool initAll()
         if(!setUpDebugMessager())
             return false;
     }
-    // Initialize Physical Devices
+    // Initialize Physical Device
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(globVar.myVkInstance, &deviceCount, nullptr);
     if(!deviceCount)
@@ -191,6 +191,35 @@ bool initAll()
     if(!globVar.myVkPhysicalDevice)
     {
         printf("Failed to find a suitable GPU\n");
+        return false;
+    }
+    // Initialize Logical Device
+    QueueFamilyIndices indices = findQueueFamilies(globVar.myVkPhysicalDevice);
+    VkDeviceQueueCreateInfo queueCreateInfo;
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
+    queueCreateInfo.queueCount = 1;
+    float queueCreatePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queueCreatePriority;
+    VkPhysicalDeviceFeatures deviceFeatures = {}; // Leave all features to VK_FALSE for now
+    VkDeviceCreateInfo createInfo;
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.enabledExtensionCount = 0; // Device specific extension, leave to 0 for now
+    if(globVar.myVkValLayersEnabled)
+    {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myVkValLayers.size());
+        createInfo.ppEnabledLayerNames = globVar.myVkValLayers.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
+    if(vkCreateDevice(globVar.myVkPhysicalDevice, &createInfo, nullptr, &(globVar.myVkLogicalDevice)) != VK_SUCCESS)
+    {
+        printf("Failed to create Vulkan logical device\n");
         return false;
     }
     return true;

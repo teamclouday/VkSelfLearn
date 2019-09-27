@@ -10,6 +10,7 @@
 
 #include "globVar.hpp"
 #include "debug.hpp"
+#include "tools.hpp"
 
 #define APP_NAME        "VkSelfLearn"
 
