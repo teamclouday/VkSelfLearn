@@ -140,13 +140,24 @@ bool initAll()
         return false;
     }
     VkInstanceCreateInfo vkInstanceInfo;
-    vkInstanceInfo.pNext = NULL;
     vkInstanceInfo.pApplicationInfo = &vkAppInfo;
     vkInstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     vkInstanceInfo.enabledExtensionCount = static_cast<uint32_t>(vkenames.size());
     vkInstanceInfo.ppEnabledExtensionNames = vkenames.data();
-    vkInstanceInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myvkValLayers.size());
-    vkInstanceInfo.ppEnabledLayerNames = globVar.myvkValLayers.data();
+    vkInstanceInfo.flags = 0;
+    if(globVar.myvkValLayersEnabled)
+    {
+        vkInstanceInfo.enabledLayerCount = static_cast<uint32_t>(globVar.myvkValLayers.size());
+        vkInstanceInfo.ppEnabledLayerNames = globVar.myvkValLayers.data();
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+        populateDebugMessengerCreateInfo(debugCreateInfo);
+        vkInstanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+    }
+    else
+    {
+        vkInstanceInfo.enabledLayerCount = 0;
+        vkInstanceInfo.pNext = nullptr;
+    }
     // Create Vulkan Instance
     if(vkCreateInstance(&vkInstanceInfo, nullptr, &globVar.myVkInstance) != VK_SUCCESS)
     {
@@ -165,7 +176,8 @@ bool initAll()
 
 void destroyAll()
 {
-
+    if(globVar.myvkValLayersEnabled)
+        DestroyDebugUtilsMessengerEXT(globVar.myVkInstance, globVar.myDebugMessager, nullptr);
     if(globVar.myVkInstance)
         vkDestroyInstance(globVar.myVkInstance, nullptr);
     if(globVar.myWindow)
