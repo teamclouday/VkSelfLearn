@@ -4,7 +4,6 @@ extern GLOB_VARS globVar;
 
 bool isDeviceSuitable(VkPhysicalDevice device)
 {
-    // check queue families of the device
     QueueFamilyIndices indices = findQueueFamilies(device);
     bool indiceComplete = indices.graphicsFamilyFound && indices.presentFamilyFound;
     bool extensionSupport = checkDeviceExtensionSupport(device);
@@ -86,4 +85,36 @@ SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device)
     }
 
     return details;
+}
+
+VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR>& availableFormats)
+{
+    for(std::vector<VkSurfaceFormatKHR>::iterator iter = availableFormats.begin(); iter != availableFormats.end(); iter++)
+    {
+        if(iter->format == VK_FORMAT_B8G8R8A8_UNORM && iter->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        {
+            return *iter;
+        }
+    }
+    return availableFormats[0];
+}
+
+VkPresentModeKHR chooseSwapPresentMode(std::vector<VkPresentModeKHR>& availablePresentModes)
+{
+    for(std::vector<VkPresentModeKHR>::iterator iter = availablePresentModes.begin(); iter != availablePresentModes.end(); iter++)
+    {
+        if(*iter == VK_PRESENT_MODE_MAILBOX_KHR)
+            return *iter;
+    }
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR& capabilities)
+{
+    if(capabilities.currentExtent.width != UINT32_MAX)
+        return capabilities.currentExtent;
+    VkExtent2D actualExtent = {WINDOW_W, WINDOW_H};
+    actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
+    actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+    return actualExtent;
 }

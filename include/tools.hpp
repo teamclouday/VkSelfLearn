@@ -6,6 +6,12 @@
 
 #include "globVar.hpp"
 
+#include <set>
+#include <vector>
+#include <string>
+#include <cstdint>
+#include <algorithm>
+
 struct QueueFamilyIndices
 {
     uint32_t graphicsFamily;
@@ -25,3 +31,6 @@ bool isDeviceSuitable(VkPhysicalDevice device);
 bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR>& availableFormats);
+VkPresentModeKHR chooseSwapPresentMode(std::vector<VkPresentModeKHR>& availablePresentModes);
+VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR& capabilities);

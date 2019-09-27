@@ -13,18 +13,6 @@
 #include "debug.hpp"
 #include "tools.hpp"
 
-#define APP_NAME        "VkSelfLearn"
-
-#define WINDOW_TITLE    "Vulkan Self-Learn"
-#define WINDOW_W        800
-#define WINDOW_H        600
-
-#define FPS             144
-
-#ifndef MY_ROOT_DIR
-#define MY_ROOT_DIR     "."
-#endif
-
 bool initAll();
 void destroyAll();
 void pollEvents(bool *quit);

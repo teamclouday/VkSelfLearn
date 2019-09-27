@@ -204,9 +204,9 @@ bool initAll()
     // Initialize Logical Device
     QueueFamilyIndices indices = findQueueFamilies(globVar.myVkPhysicalDevice);
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+    std::vector<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
     float queueCreatePriority = 1.0f;
-    for(std::set<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
+    for(std::vector<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
     {
         VkDeviceQueueCreateInfo queueCreateInfo;
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -244,11 +244,60 @@ bool initAll()
     // Retrieve Queue Handles
     vkGetDeviceQueue(globVar.myVkLogicalDevice, indices.graphicsFamily, 0, &globVar.myVkGraphicsQueue);
     vkGetDeviceQueue(globVar.myVkLogicalDevice, indices.presentFamily, 0, &globVar.myVkPresentQueue);
+    // Create Swap Chain
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(globVar.myVkPhysicalDevice);
+    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    if(swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+        imageCount = swapChainSupport.capabilities.maxImageCount; // not exceed the max image count
+    VkSwapchainCreateInfoKHR swapChainInfo;
+    swapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapChainInfo.surface = globVar.myVkSurface;
+    swapChainInfo.minImageCount = imageCount;
+    swapChainInfo.imageFormat = surfaceFormat.format;
+    swapChainInfo.imageColorSpace = surfaceFormat.colorSpace;
+    swapChainInfo.imageExtent = extent;
+    swapChainInfo.imageArrayLayers = 1;
+    swapChainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if(indices.graphicsFamily != indices.presentFamily)
+    {
+        swapChainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        swapChainInfo.queueFamilyIndexCount = 2;
+        swapChainInfo.pQueueFamilyIndices = uniqueQueueFamilies.data();
+    }
+    else
+    {
+        swapChainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapChainInfo.queueFamilyIndexCount = 0;
+    }
+    swapChainInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+    swapChainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapChainInfo.presentMode = presentMode;
+    swapChainInfo.clipped = VK_TRUE;
+    swapChainInfo.oldSwapchain = VK_NULL_HANDLE;
+    swapChainInfo.flags = 0;
+    swapChainInfo.pNext = nullptr;
+    if(vkCreateSwapchainKHR(globVar.myVkLogicalDevice, &swapChainInfo, nullptr, &globVar.myVkSwapChain) != VK_SUCCESS)
+    {
+        printf("Failed to create Vulkan Swap Chain\n");
+        return false;
+    }
+    // Get Swap Chain Images
+    vkGetSwapchainImagesKHR(globVar.myVkLogicalDevice, globVar.myVkSwapChain, &imageCount, nullptr);
+    globVar.myVkSwapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(globVar.myVkLogicalDevice, globVar.myVkSwapChain, &imageCount, globVar.myVkSwapChainImages.data());
+    // Store Swap Chain Vars
+    globVar.myVkSwapChainFormat = surfaceFormat.format;
+    globVar.myVkSwapChainExtent = extent;
     return true;
 }
 
 void destroyAll()
 {
+    if(globVar.myVkSwapChain)
+        vkDestroySwapchainKHR(globVar.myVkLogicalDevice, globVar.myVkSwapChain, nullptr);
     if(globVar.myVkSurface)
         vkDestroySurfaceKHR(globVar.myVkInstance, globVar.myVkSurface, nullptr);
     if(globVar.myVkLogicalDevice)
