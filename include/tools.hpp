@@ -9,7 +9,9 @@
 struct QueueFamilyIndices
 {
     uint32_t graphicsFamily;
-    bool found = false;
+    bool graphicsFamilyFound = false;
+    uint32_t presentFamily;
+    bool presentFamilyFound = false;
 };
 
 bool isDeviceSuitable(VkPhysicalDevice device);

@@ -15,4 +15,7 @@ struct GLOB_VARS
     VkDebugUtilsMessengerEXT myDebugMessager = nullptr;
     VkPhysicalDevice myVkPhysicalDevice = nullptr;
     VkDevice myVkLogicalDevice = nullptr;
+    VkQueue myVkGraphicsQueue = nullptr;
+    VkQueue myVkPresentQueue = nullptr;
+    VkSurfaceKHR myVkSurface = nullptr;
 };

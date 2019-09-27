@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <set>
 
 #include "globVar.hpp"
 #include "debug.hpp"

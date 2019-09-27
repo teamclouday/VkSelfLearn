@@ -170,6 +170,12 @@ bool initAll()
         if(!setUpDebugMessager())
             return false;
     }
+    // Create Window Surface
+    if(SDL_Vulkan_CreateSurface(globVar.myWindow, globVar.myVkInstance, &globVar.myVkSurface) != SDL_TRUE)
+    {
+        printf("Failed to create Vulkan surface from SDL2\nSDL Error: %s\n", SDL_GetError());
+        return false;
+    }
     // Initialize Physical Device
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(globVar.myVkInstance, &deviceCount, nullptr);
@@ -195,19 +201,25 @@ bool initAll()
     }
     // Initialize Logical Device
     QueueFamilyIndices indices = findQueueFamilies(globVar.myVkPhysicalDevice);
-    VkDeviceQueueCreateInfo queueCreateInfo;
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
-    queueCreateInfo.queueCount = 1;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
     float queueCreatePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queueCreatePriority;
-    queueCreateInfo.flags = 0;
-    queueCreateInfo.pNext = nullptr;
+    for(std::set<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
+    {
+        VkDeviceQueueCreateInfo queueCreateInfo;
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = *iter;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queueCreatePriority;
+        queueCreateInfo.flags = 0;
+        queueCreateInfo.pNext = nullptr;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
     VkPhysicalDeviceFeatures deviceFeatures = {}; // Leave all features to VK_FALSE for now
     VkDeviceCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = 0; // Device specific extension, leave to 0 for now
     createInfo.flags = 0;
@@ -226,11 +238,16 @@ bool initAll()
         printf("Failed to create Vulkan logical device\n");
         return false;
     }
+    // Retrieve Queue Handles
+    vkGetDeviceQueue(globVar.myVkLogicalDevice, indices.graphicsFamily, 0, &globVar.myVkGraphicsQueue);
+    vkGetDeviceQueue(globVar.myVkLogicalDevice, indices.presentFamily, 0, &globVar.myVkPresentQueue);
     return true;
 }
 
 void destroyAll()
 {
+    if(globVar.myVkSurface)
+        vkDestroySurfaceKHR(globVar.myVkInstance, globVar.myVkSurface, nullptr);
     if(globVar.myVkLogicalDevice)
         vkDestroyDevice(globVar.myVkLogicalDevice, nullptr);
     if(globVar.myVkValLayersEnabled)

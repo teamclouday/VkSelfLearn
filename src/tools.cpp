@@ -13,7 +13,7 @@ bool isDeviceSuitable(VkPhysicalDevice device)
     
     // check queue families of the device
     QueueFamilyIndices indices = findQueueFamilies(device);
-    return indices.found; // just use any gpu available
+    return indices.graphicsFamilyFound && indices.presentFamilyFound; // just use any gpu available
 }
 
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
@@ -32,8 +32,15 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
         if(iter->queueCount > 0 && iter->queueFlags & VK_QUEUE_GRAPHICS_BIT)
         {
             indices.graphicsFamily = i;
-            indices.found = true;
-            break;
+            indices.graphicsFamilyFound = true;
+        }
+        // find one that support present queue
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, globVar.myVkSurface, &presentSupport);
+        if(iter->queueCount > 0 && presentSupport)
+        {
+            indices.presentFamily = i;
+            indices.presentFamilyFound = true;
         }
         i++;
     }
