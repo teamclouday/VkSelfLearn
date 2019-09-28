@@ -38,4 +38,5 @@ struct GLOB_VARS
     VkFormat myVkSwapChainFormat;
     VkExtent2D myVkSwapChainExtent;
     VkDebugUtilsMessengerEXT myDebugMessager = nullptr;
+    VkPipelineLayout myVkPipelineLayout = nullptr;
 };

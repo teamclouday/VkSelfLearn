@@ -11,6 +11,7 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+#include <fstream>
 
 struct QueueFamilyIndices
 {
@@ -34,3 +35,6 @@ SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR>& availableFormats);
 VkPresentModeKHR chooseSwapPresentMode(std::vector<VkPresentModeKHR>& availablePresentModes);
 VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR& capabilities);
+std::vector<char> readCompiledShader(const std::string& filename);
+VkShaderModule createShaderModule(const std::vector<char>& code);
+bool createGraphicsPipeline();
