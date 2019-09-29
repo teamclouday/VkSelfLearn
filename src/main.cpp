@@ -315,11 +315,100 @@ bool initAll()
             return false;
         }
     }
+    // Create Graphics Pipeline
+    if(!createGraphicsPipeline())
+        return false;
+    // Create Framebuffers
+    globVar.myVkSwapChainFramebuffers.resize(globVar.myVkSwapChainImageViews.size());
+    for(size_t i = 0; i < globVar.myVkSwapChainImageViews.size(); i++)
+    {
+        VkImageView attachments[] = {globVar.myVkSwapChainImageViews[i]};
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = globVar.myVkRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = globVar.myVkSwapChainExtent.width;
+        framebufferInfo.height = globVar.myVkSwapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if(vkCreateFramebuffer(globVar.myVkLogicalDevice, &framebufferInfo, nullptr, &globVar.myVkSwapChainFramebuffers[i]) != VK_SUCCESS)
+        {
+            printf("Failed to create Vulkan Framebuffer\n");
+            return false;
+        }
+    }
+    // Create Command Pool
+    VkCommandPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = indices.graphicsFamily;
+    poolInfo.flags = 0;
+    if(vkCreateCommandPool(globVar.myVkLogicalDevice, &poolInfo, nullptr, &globVar.myVkCommandPool) != VK_SUCCESS)
+    {
+        printf("Failed to create Vulkan Command Pool\n");
+        return false;
+    }
+    // Allocate Command Buffers
+    globVar.myVkCommandBuffers.resize(globVar.myVkSwapChainFramebuffers.size());
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = globVar.myVkCommandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = static_cast<uint32_t>(globVar.myVkCommandBuffers.size());
+    if(vkAllocateCommandBuffers(globVar.myVkLogicalDevice, &allocInfo, globVar.myVkCommandBuffers.data()) != VK_SUCCESS)
+    {
+        printf("Failed to allocate Vulkan Command Buffers\n");
+        return false;
+    }
+    // Start Command Buffer Recording
+    for(size_t i = 0; i < globVar.myVkCommandBuffers.size(); i++)
+    {
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = 0;
+        beginInfo.pInheritanceInfo = nullptr;
+        if(vkBeginCommandBuffer(globVar.myVkCommandBuffers[i], &beginInfo) != VK_SUCCESS)
+        {
+            printf("Failed to begin Recording Vulkan Command Buffer\n");
+            return false;
+        }
+        // Start Render Pass
+        VkRenderPassBeginInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = globVar.myVkRenderPass;
+        renderPassInfo.framebuffer = globVar.myVkSwapChainFramebuffers[i];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = globVar.myVkSwapChainExtent;
+        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+        vkCmdBeginRenderPass(globVar.myVkCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(globVar.myVkCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, globVar.myVkGraphicsPipeline);
+        vkCmdDraw(globVar.myVkCommandBuffers[i], 3, 1, 0, 0);
+        vkCmdEndRenderPass(globVar.myVkCommandBuffers[i]);
+        if(vkEndCommandBuffer(globVar.myVkCommandBuffers[i]) != VK_SUCCESS)
+        {
+            printf("Failed to Record Vulkan Command Buffer\n");
+            return false;
+        }
+    }
     return true;
 }
 
 void destroyAll()
 {
+    if(globVar.myVkCommandPool)
+        vkDestroyCommandPool(globVar.myVkLogicalDevice, globVar.myVkCommandPool, nullptr);
+    for(std::vector<VkFramebuffer>::iterator iter = globVar.myVkSwapChainFramebuffers.begin(); iter != globVar.myVkSwapChainFramebuffers.end(); iter++)
+    {
+        vkDestroyFramebuffer(globVar.myVkLogicalDevice, *iter, nullptr);
+    }
+    if(globVar.myVkGraphicsPipeline)
+        vkDestroyPipeline(globVar.myVkLogicalDevice, globVar.myVkGraphicsPipeline, nullptr);
+    if(globVar.myVkPipelineLayout)
+        vkDestroyPipelineLayout(globVar.myVkLogicalDevice, globVar.myVkPipelineLayout, nullptr);
+    if(globVar.myVkRenderPass)
+        vkDestroyRenderPass(globVar.myVkLogicalDevice, globVar.myVkRenderPass, nullptr);
     for(std::vector<VkImageView>::iterator iter = globVar.myVkSwapChainImageViews.begin(); iter != globVar.myVkSwapChainImageViews.end(); iter++)
     {
         vkDestroyImageView(globVar.myVkLogicalDevice, *iter, nullptr);

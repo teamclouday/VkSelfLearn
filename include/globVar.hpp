@@ -39,4 +39,9 @@ struct GLOB_VARS
     VkExtent2D myVkSwapChainExtent;
     VkDebugUtilsMessengerEXT myDebugMessager = nullptr;
     VkPipelineLayout myVkPipelineLayout = nullptr;
+    VkRenderPass myVkRenderPass = nullptr;
+    VkPipeline myVkGraphicsPipeline = nullptr;
+    std::vector<VkFramebuffer> myVkSwapChainFramebuffers;
+    VkCommandPool myVkCommandPool = nullptr;
+    std::vector<VkCommandBuffer> myVkCommandBuffers;
 };
