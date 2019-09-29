@@ -76,19 +76,19 @@ void pollEvents(bool *quit)
                 case SDLK_ESCAPE:
                     *quit = true;
                     break;
-                case SDLK_F11:
-                {
-                    bool isFullScreen = SDL_GetWindowFlags(globVar.myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
-#ifdef __unix__
-                    SDL_SetWindowPosition(globVar.myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-#endif
-                    SDL_SetWindowFullscreen(globVar.myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-#ifdef _WIN32
-                    if(isFullScreen)
-                        SDL_SetWindowPosition(globVar.myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-#endif
-                    break;
-                }
+//                 case SDLK_F11:
+//                 {
+//                     bool isFullScreen = SDL_GetWindowFlags(globVar.myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+// #ifdef __unix__
+//                     SDL_SetWindowPosition(globVar.myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+// #endif
+//                     SDL_SetWindowFullscreen(globVar.myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+// #ifdef _WIN32
+//                     if(isFullScreen)
+//                         SDL_SetWindowPosition(globVar.myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+// #endif
+//                     break;
+//                 }
             }
         }
     }
