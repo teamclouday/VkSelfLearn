@@ -15,5 +15,6 @@
 
 bool initAll();
 void destroyAll();
+void renderFrame();
 void pollEvents(bool *quit);
 void fpsControl(Uint32* tNow, Uint32 *tPrev);

@@ -8,16 +8,15 @@
 #include <set>
 #include <string>
 
-#define APP_NAME        "VkSelfLearn"
-
-#define WINDOW_TITLE    "Vulkan Self-Learn"
-#define WINDOW_W        800
-#define WINDOW_H        600
-
-#define FPS             144
+#define APP_NAME                "VkSelfLearn"
+#define WINDOW_TITLE            "Vulkan Self-Learn"
+#define WINDOW_W                800
+#define WINDOW_H                600
+#define FPS                     144
+#define MAX_FRAMES_IN_FLIGHT    2
 
 #ifndef MY_ROOT_DIR
-#define MY_ROOT_DIR     "."
+#define MY_ROOT_DIR             "."
 #endif
 
 struct GLOB_VARS
@@ -44,4 +43,8 @@ struct GLOB_VARS
     std::vector<VkFramebuffer> myVkSwapChainFramebuffers;
     VkCommandPool myVkCommandPool = nullptr;
     std::vector<VkCommandBuffer> myVkCommandBuffers;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    size_t currentFrame = 0;
 };

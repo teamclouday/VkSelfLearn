@@ -2,6 +2,46 @@
 
 GLOB_VARS globVar;
 
+void renderFrame()
+{
+    vkWaitForFences(globVar.myVkLogicalDevice, 1, &globVar.inFlightFences[globVar.currentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(globVar.myVkLogicalDevice, 1, &globVar.inFlightFences[globVar.currentFrame]);
+    // aquire an image from swap chain
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(globVar.myVkLogicalDevice, globVar.myVkSwapChain, UINT64_MAX, globVar.imageAvailableSemaphores[globVar.currentFrame], VK_NULL_HANDLE, &imageIndex);
+    // submit command buffer
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    VkSemaphore waitSemaphores[] = {globVar.imageAvailableSemaphores[globVar.currentFrame]};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &globVar.myVkCommandBuffers[imageIndex];
+    VkSemaphore signalSemaphore[] = {globVar.renderFinishedSemaphores[globVar.currentFrame]};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphore;
+    if(vkQueueSubmit(globVar.myVkGraphicsQueue, 1, &submitInfo, globVar.inFlightFences[globVar.currentFrame]) != VK_SUCCESS)
+    {
+        printf("Failed to submit draw command buffer\n");
+        return;
+    }
+    // create presentation
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphore;
+    VkSwapchainKHR swapChains[] = {globVar.myVkSwapChain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pResults = nullptr;
+    vkQueuePresentKHR(globVar.myVkPresentQueue, &presentInfo);
+
+    globVar.currentFrame = (globVar.currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
 int main(int argc, char *argv[])
 {
     if(!initAll())
@@ -13,7 +53,9 @@ int main(int argc, char *argv[])
     {
         pollEvents(&quit);
         fpsControl(&tNow, &tPrev);
+        renderFrame();
     }
+    vkDeviceWaitIdle(globVar.myVkLogicalDevice);
     return 0;
 }
 
@@ -392,11 +434,36 @@ bool initAll()
             return false;
         }
     }
+    // Create Semaphores and Fences
+    globVar.imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    globVar.renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    globVar.inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkFenceCreateInfo fenceInfo = {};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        if(vkCreateSemaphore(globVar.myVkLogicalDevice, &semaphoreInfo, nullptr, &globVar.imageAvailableSemaphores[i]) != VK_SUCCESS ||
+           vkCreateSemaphore(globVar.myVkLogicalDevice, &semaphoreInfo, nullptr, &globVar.renderFinishedSemaphores[i]) != VK_SUCCESS ||
+           vkCreateFence(globVar.myVkLogicalDevice, &fenceInfo, nullptr, &globVar.inFlightFences[i]) != VK_SUCCESS)
+        {
+            printf("Failed to create Vulkan Synchronization Objects\n");
+            return false;
+        }
+    }
     return true;
 }
 
 void destroyAll()
 {
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        vkDestroySemaphore(globVar.myVkLogicalDevice, globVar.imageAvailableSemaphores[i], nullptr);
+        vkDestroySemaphore(globVar.myVkLogicalDevice, globVar.renderFinishedSemaphores[i], nullptr);
+        vkDestroyFence(globVar.myVkLogicalDevice, globVar.inFlightFences[i], nullptr);
+    }
     if(globVar.myVkCommandPool)
         vkDestroyCommandPool(globVar.myVkLogicalDevice, globVar.myVkCommandPool, nullptr);
     for(std::vector<VkFramebuffer>::iterator iter = globVar.myVkSwapChainFramebuffers.begin(); iter != globVar.myVkSwapChainFramebuffers.end(); iter++)
