@@ -56,6 +56,8 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
             indices.presentFamily = i;
             indices.presentFamilyFound = true;
         }
+        if(indices.graphicsFamilyFound && indices.presentFamilyFound)
+            break;
         i++;
     }
 

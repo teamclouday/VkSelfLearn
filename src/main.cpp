@@ -246,9 +246,9 @@ bool initAll()
     // Initialize Logical Device
     QueueFamilyIndices indices = findQueueFamilies(globVar.myVkPhysicalDevice);
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::vector<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
     float queueCreatePriority = 1.0f;
-    for(std::vector<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
+    for(std::set<uint32_t>::iterator iter = uniqueQueueFamilies.begin(); iter != uniqueQueueFamilies.end(); iter++)
     {
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -303,11 +303,12 @@ bool initAll()
     swapChainInfo.imageExtent = extent;
     swapChainInfo.imageArrayLayers = 1;
     swapChainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
     if(indices.graphicsFamily != indices.presentFamily)
     {
         swapChainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapChainInfo.queueFamilyIndexCount = 2;
-        swapChainInfo.pQueueFamilyIndices = uniqueQueueFamilies.data();
+        swapChainInfo.pQueueFamilyIndices = queueFamilyIndices;
     }
     else
     {
